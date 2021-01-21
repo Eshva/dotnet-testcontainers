@@ -4,7 +4,7 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers.Unix.MessageBroker
   using System.Collections.Generic;
   using System.Threading.Tasks;
   using Confluent.Kafka;
-  using Fixtures.Containers.Modules.MessageBrokers;
+  using DotNet.Testcontainers.Tests.Fixtures.Containers.Modules.MessageBrokers;
   using Xunit;
 
   public class KafkaTestcontainerTest : IClassFixture<KafkaFixture>
@@ -20,23 +20,26 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers.Unix.MessageBroker
     public async Task StartsWorkingKafkaInstance()
     {
       // Given
+      const string testMessage = "TestMessage";
+
       // When
-      using var producer = new ProducerBuilder<string, string>(new Dictionary<string, string>()
+      using var producer = new ProducerBuilder<string, string>(new Dictionary<string, string>
       {
         { "bootstrap.servers", this.kafkaFixture.Container.BootstrapServers }
       }).Build();
 
       var productionReportTaskSrc = new TaskCompletionSource<DeliveryReport<string, string>>();
 
-      producer.Produce("test_topic", new Message<string, string>()
+      producer.Produce("test_topic", new Message<string, string>
       {
-        Value = "TestMessage"
+        Value = testMessage
       }, report => productionReportTaskSrc.SetResult(report));
 
-      await productionReportTaskSrc.Task;
+      await productionReportTaskSrc.Task
+        .ConfigureAwait(false);
 
       // Then
-      using var consumer = new ConsumerBuilder<string, string>(new Dictionary<string, string>()
+      using var consumer = new ConsumerBuilder<string, string>(new Dictionary<string, string>
       {
         { "bootstrap.servers", this.kafkaFixture.Container.BootstrapServers },
         { "auto.offset.reset", "earliest" },
@@ -48,7 +51,7 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers.Unix.MessageBroker
       var result = consumer.Consume(TimeSpan.FromSeconds(5));
 
       Assert.NotNull(result);
-      Assert.Equal("TestMessage", result.Message.Value);
+      Assert.Equal(testMessage, result.Message.Value);
     }
   }
 }

@@ -156,6 +156,7 @@ namespace DotNet.Testcontainers.Clients
 
       tarOutputStream.CloseEntry();
       tarOutputStream.Close();
+
       await tarOutputStream.FlushAsync(ct)
         .ConfigureAwait(false);
 
