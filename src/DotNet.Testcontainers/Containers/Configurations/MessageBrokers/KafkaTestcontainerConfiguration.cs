@@ -5,7 +5,6 @@ namespace DotNet.Testcontainers.Containers.Configurations.MessageBrokers
   using System.Threading;
   using System.Threading.Tasks;
   using DotNet.Testcontainers.Containers.Configurations.Abstractions;
-  using DotNet.Testcontainers.Containers.Modules.MessageBrokers;
   using DotNet.Testcontainers.Containers.WaitStrategies;
 
   public class KafkaTestcontainerConfiguration : HostedServiceConfiguration
@@ -50,25 +49,20 @@ namespace DotNet.Testcontainers.Containers.Configurations.MessageBrokers
     /// <summary>
     /// Gets the startup callback.
     /// </summary>
-    public virtual Func<IDockerContainer, CancellationToken, Task> StartupCallback { get; }
-      = async (container, ct) =>
+    public virtual Func<IDockerContainer, CancellationToken, Task> StartupCallback
+      => (container, ct) =>
       {
-        var kafkaContainer = (KafkaTestcontainer)container;
-
-        var startupScript =
-$@"#!/bin/sh
+        var startupScript = $@"#!/bin/sh
 echo 'clientPort={ZookeeperPort}' > zookeeper.properties
 echo 'dataDir=/var/lib/zookeeper/data' >> zookeeper.properties
 echo 'dataLogDir=/var/lib/zookeeper/log' >> zookeeper.properties
 zookeeper-server-start zookeeper.properties &
-export KAFKA_ADVERTISED_LISTENERS='PLAINTEXT://{kafkaContainer.Hostname}:{kafkaContainer.Port},BROKER://localhost:{BrokerPort}'
+export KAFKA_ADVERTISED_LISTENERS='PLAINTEXT://localhost:{container.GetMappedPublicPort(this.DefaultPort)},BROKER://localhost:{BrokerPort}'
 . /etc/confluent/docker/bash-config
 /etc/confluent/docker/configure
-/etc/confluent/docker/launch
-";
+/etc/confluent/docker/launch";
 
-        await container.CopyFileAsync(StartupScriptPath, Encoding.UTF8.GetBytes(startupScript), 0x1ff,  ct: ct)
-          .ConfigureAwait(false);
+        return container.CopyFileAsync(StartupScriptPath, Encoding.UTF8.GetBytes(startupScript), 0x1ff, ct: ct);
       };
 
     public override IWaitForContainerOS WaitStrategy => Wait.ForUnixContainer()

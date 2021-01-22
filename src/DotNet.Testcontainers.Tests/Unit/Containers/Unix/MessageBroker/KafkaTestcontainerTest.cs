@@ -20,26 +20,23 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers.Unix.MessageBroker
     public async Task StartsWorkingKafkaInstance()
     {
       // Given
-      const string testMessage = "TestMessage";
-
       // When
-      using var producer = new ProducerBuilder<string, string>(new Dictionary<string, string>
+      using var producer = new ProducerBuilder<string, string>(new Dictionary<string, string>()
       {
         { "bootstrap.servers", this.kafkaFixture.Container.BootstrapServers }
       }).Build();
 
       var productionReportTaskSrc = new TaskCompletionSource<DeliveryReport<string, string>>();
 
-      producer.Produce("test_topic", new Message<string, string>
+      producer.Produce("test_topic", new Message<string, string>()
       {
-        Value = testMessage
+        Value = "TestMessage"
       }, report => productionReportTaskSrc.SetResult(report));
 
-      await productionReportTaskSrc.Task
-        .ConfigureAwait(false);
+      await productionReportTaskSrc.Task;
 
       // Then
-      using var consumer = new ConsumerBuilder<string, string>(new Dictionary<string, string>
+      using var consumer = new ConsumerBuilder<string, string>(new Dictionary<string, string>()
       {
         { "bootstrap.servers", this.kafkaFixture.Container.BootstrapServers },
         { "auto.offset.reset", "earliest" },
@@ -51,7 +48,7 @@ namespace DotNet.Testcontainers.Tests.Unit.Containers.Unix.MessageBroker
       var result = consumer.Consume(TimeSpan.FromSeconds(5));
 
       Assert.NotNull(result);
-      Assert.Equal(testMessage, result.Message.Value);
+      Assert.Equal("TestMessage", result.Message.Value);
     }
   }
 }
