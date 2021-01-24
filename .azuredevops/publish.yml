@@ -44,14 +44,14 @@ jobs:
           ./cake-tools/dotnet-cake --target=Restore-NuGet-Packages
         displayName: Prepare
 
-      - powershell: ./cake-tools/dotnet-cake --target=Sonar-Begin
-        displayName: Sonar Begin
+#      - powershell: ./cake-tools/dotnet-cake --target=Sonar-Begin
+#        displayName: Sonar Begin
 
       - powershell: ./cake-tools/dotnet-cake --target=Build
         displayName: Build
 
-      - powershell: ./cake-tools/dotnet-cake --target=Sonar-End
-        displayName: Sonar End
+#      - powershell: ./cake-tools/dotnet-cake --target=Sonar-End
+#        displayName: Sonar End
 
       - powershell: |
           $env:FEED_APIKEY = "$(feed.apikey)"
